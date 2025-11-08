@@ -1,0 +1,68 @@
+doctype html
+html
+  head
+    meta(charset="utf-8")
+    title 2 Labos
+    link(rel="stylesheet", href="styles.css")  
+  body
+    section
+      h2 Trenutni mod
+      p
+        | XSS: 
+        strong#xss-status #{toggles && toggles.xssEnabled ? 'Nesigurno' : 'Sigurno'}
+        |  &nbsp;|&nbsp;
+        | Broken Access Control: 
+        strong#bac-status #{toggles && toggles.brokenAccessEnabled ? 'Nesigurno' : 'Sigurno'}
+
+    section
+      label
+        input#toggle-xss(type="checkbox", checked=(toggles && toggles.xssEnabled))
+        |  XSS
+        section
+          h2 Opasna forma
+          p Možete poslati komentar putem forme ispod. Ako je XSS omogućen, sadržaj će se prikazati bez filtriranja.
+          p Ako je XSS uključen, komentar se umeće (a i šalje) kao raw HTML (ranjivo). Kada je XSS isključen, prikazuje se kao običan tekst bez izvršavanja koda.
+          form#toggle-xss(action="/comment" method="POST")
+            label Ime:
+            input(type="text" name="author")
+            br
+            label Komentar:
+            br
+            textarea(name="content" rows="6" cols="60")
+            br
+            button#comment-submit(type="submit") Pošalji komentar
+      section
+        h3 Komentari:
+        if comments && comments.length
+          each c in comments
+            .comment
+              if toggles && toggles.xssEnabled
+                strong= c.author + ' (autor)'
+                br
+                div !{c.content}
+              else
+                strong= c.author + ' (autor)'
+                br
+                div #{c.content}
+              small(style="color:#666")= ' — ' + new Date(c.created_at).toLocaleString()
+
+        else
+          p Nema komentara.
+      br
+      label
+        input#toggle-bac(type="checkbox", checked=(toggles && toggles.brokenAccessEnabled))
+        |  Broken Access Control
+      section
+        h2 Opasna akcija
+        p Iz konzole možete poslati `window.sendDelete();` da ne morate koristiti Postman. Ovo pokazuje da se provjera je li korisnik admin vrši samo na frontendu, a ne i na backendu.
+        p
+          - const isAdmin = !!admin
+          button#btn-delete-all(type="button", disabled = !isAdmin) Izbriši sve podatke
+          if !isAdmin
+            span#delete-note(style="margin-left:12px; color:#a00; font-weight:600")
+          else
+            span#delete-note(style="margin-left:12px; color:#080; font-weight:600")
+        p
+          small#delete-result
+
+    script(src="/main.js")
